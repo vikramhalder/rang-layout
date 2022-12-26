@@ -33,7 +33,7 @@ class RangSeekBarView : View {
     private var springAnimation: SpringAnimation? = null
     private var thumbX: Float = -1f
     private var thumbY: Float = -1f
-    private val initialControlXPositionQueue = ArrayBlockingQueue<Int>(1)
+    private val initialControlXPositionQueue = ArrayBlockingQueue<Long>(1)
 
     // Used to determine the start and end points of the track.
     // Useful for drawing and also for other calculations.
@@ -85,8 +85,8 @@ class RangSeekBarView : View {
     private var dampingRatio: Float = 0f
     private var stiffness: Float = 0f
 
-    private var minValue: Int = 0
-    private var maxValue: Int = 100
+    private var minValue: Long = 0
+    private var maxValue: Long = 100
 
     private var onChangeListener: OnRubberSeekBarChangeListener? = null
 
@@ -127,8 +127,8 @@ class RangSeekBarView : View {
             defaultThumbInsideColor = typedArray.getColor(R.styleable.RubberSeekBar_defaultThumbInsideColor, Color.WHITE)
             dampingRatio = typedArray.getFloat(R.styleable.RubberSeekBar_dampingRatio, SpringForce.DAMPING_RATIO_HIGH_BOUNCY)
             stiffness = typedArray.getFloat(R.styleable.RubberSeekBar_stiffness, SpringForce.STIFFNESS_LOW)
-            minValue = typedArray.getInt(R.styleable.RubberSeekBar_minValue, 0)
-            maxValue = typedArray.getInt(R.styleable.RubberSeekBar_maxValue, 100)
+            minValue = typedArray.getString(R.styleable.RubberSeekBar_minValue)?.toLong() ?: 0L
+            maxValue = typedArray.getString(R.styleable.RubberSeekBar_maxValue)?.toLong() ?: 100L
             rangPickerBehavior = typedArray.getInt(R.styleable.RubberSeekBar_elasticBehavior, 1).run {
                 when (this) {
                     0 -> RangPickerBehavior.LINEAR
@@ -138,7 +138,7 @@ class RangSeekBarView : View {
                 }
             }
             if (typedArray.hasValue(R.styleable.RubberSeekBar_initialValue)) {
-                setCurrentValue(typedArray.getInt(R.styleable.RubberSeekBar_initialValue, minValue))
+                setCurrentValue(typedArray.getString(R.styleable.RubberSeekBar_initialValue)?.toLong() ?: 0L)
             }
             typedArray.recycle()
         }
@@ -317,21 +317,21 @@ class RangSeekBarView : View {
 //                    onChangeListener?.onProgressChanged(this, getCurrentValue(), true)
                     onChangeListener?.onStopTrackingTouch(this)
                     springAnimation =
-                            SpringAnimation(FloatValueHolder(trackY))
-                                    .setStartValue(thumbY)
-                                    .setSpring(
-                                            SpringForce(trackY)
-                                                    .setDampingRatio(dampingRatio)
-                                                    .setStiffness(stiffness)
-                                    )
-                                    .addUpdateListener { _, value, _ ->
-                                        thumbY = value
-                                        invalidate()
-                                    }
-                                    .addEndListener { _, _, _, _ ->
-                                        thumbY = trackY
-                                        invalidate()
-                                    }
+                        SpringAnimation(FloatValueHolder(trackY))
+                            .setStartValue(thumbY)
+                            .setSpring(
+                                SpringForce(trackY)
+                                    .setDampingRatio(dampingRatio)
+                                    .setStiffness(stiffness)
+                            )
+                            .addUpdateListener { _, value, _ ->
+                                thumbY = value
+                                invalidate()
+                            }
+                            .addEndListener { _, _, _, _ ->
+                                thumbY = trackY
+                                invalidate()
+                            }
                     springAnimation?.start()
                     return true
                 }
@@ -345,14 +345,14 @@ class RangSeekBarView : View {
             drawableThumb?.let {
                 setDrawableHalfWidthAndHeight()
                 if (x > thumbX - drawableThumbHalfWidth && x < thumbX + drawableThumbHalfWidth &&
-                        y > thumbY - drawableThumbHalfHeight && x < thumbY + drawableThumbHalfHeight
+                    y > thumbY - drawableThumbHalfHeight && x < thumbY + drawableThumbHalfHeight
                 ) {
                     return true
                 }
             }
         } else {
             if ((x - thumbX) * (x - thumbX) +
-                    (y - thumbY) * (y - thumbY) <= drawableThumbRadius * drawableThumbRadius
+                (y - thumbY) * (y - thumbY) <= drawableThumbRadius * drawableThumbRadius
             ) {
                 return true
             }
@@ -381,19 +381,19 @@ class RangSeekBarView : View {
     private fun Float.coerceToStretchRange(x: Float): Float {
         return if (this <= height / 2) {
             this.coerceAtLeast(
-                    if (x <= width / 2) {
-                        -(((2 * (stretchRange + height / 2) - height) * (x - trackStartX)) / (width - (2 * trackStartX))) + (height / 2)
-                    } else {
-                        -(((2 * (stretchRange + height / 2) - height) * (x - trackEndX)) / (width - (2 * trackEndX))) + (height / 2)
-                    }
+                if (x <= width / 2) {
+                    -(((2 * (stretchRange + height / 2) - height) * (x - trackStartX)) / (width - (2 * trackStartX))) + (height / 2)
+                } else {
+                    -(((2 * (stretchRange + height / 2) - height) * (x - trackEndX)) / (width - (2 * trackEndX))) + (height / 2)
+                }
             )
         } else {
             this.coerceAtMost(
-                    if (x <= width / 2) {
-                        (((2 * (stretchRange + height / 2) - height) * (x - trackStartX)) / (width - (2 * trackStartX))) + (height / 2)
-                    } else {
-                        (((2 * (stretchRange + height / 2) - height) * (x - trackEndX)) / (width - (2 * trackEndX))) + (height / 2)
-                    }
+                if (x <= width / 2) {
+                    (((2 * (stretchRange + height / 2) - height) * (x - trackStartX)) / (width - (2 * trackStartX))) + (height / 2)
+                } else {
+                    (((2 * (stretchRange + height / 2) - height) * (x - trackEndX)) / (width - (2 * trackEndX))) + (height / 2)
+                }
             )
         }
     }
@@ -402,7 +402,7 @@ class RangSeekBarView : View {
 
     //region Getter functions
 
-    fun getCurrentValue(): Int {
+    fun getCurrentValue(): Long {
         if (thumbX <= trackStartX) {
             return minValue
         } else if (thumbX >= trackEndX) {
@@ -411,11 +411,11 @@ class RangSeekBarView : View {
         return Math.round(((thumbX - trackStartX) / (trackEndX - trackStartX)) * (maxValue - minValue)) + minValue
     }
 
-    fun getMin(): Int {
+    fun getMin(): Long {
         return minValue
     }
 
-    fun getMax(): Int {
+    fun getMax(): Long {
         return maxValue
     }
 
@@ -472,7 +472,7 @@ class RangSeekBarView : View {
         setCurrentValue(oldThumbValue)
         thumbY = (thumbY * drawableThumbRadius) / oldY
         if (springAnimation?.isRunning == true) springAnimation?.animateToFinalPosition(
-                drawableThumbRadius
+            drawableThumbRadius
         )
         invalidate()
         requestLayout()
@@ -531,7 +531,7 @@ class RangSeekBarView : View {
     }
 
     @Throws(java.lang.IllegalArgumentException::class)
-    fun setMin(value: Int) {
+    fun setMin(value: Long) {
         if (value >= maxValue) {
             throw java.lang.IllegalArgumentException("Min value must be smaller than max value")
         }
@@ -545,7 +545,7 @@ class RangSeekBarView : View {
     }
 
     @Throws(java.lang.IllegalArgumentException::class)
-    fun setMax(value: Int) {
+    fun setMax(value: Long) {
         if (value <= minValue) {
             throw java.lang.IllegalArgumentException("Max value must be greater than min value")
         }
@@ -558,7 +558,7 @@ class RangSeekBarView : View {
         }
     }
 
-    fun setCurrentValue(value: Int) {
+    fun setCurrentValue(value: Long) {
         val validValue = value.coerceAtLeast(minValue).coerceAtMost(maxValue)
         if (trackEndX < 0) {
             //If this function gets called before the view gets Played out and learns what it's width value is
@@ -570,7 +570,7 @@ class RangSeekBarView : View {
             return
         }
         thumbX =
-                (((validValue - minValue).toFloat() / (maxValue - minValue)) * (trackEndX - trackStartX)) + trackStartX
+            (((validValue - minValue).toFloat() / (maxValue - minValue)) * (trackEndX - trackStartX)) + trackStartX
         onChangeListener?.onProgressChanged(this, getCurrentValue(), false)
         invalidate()
     }
@@ -589,7 +589,7 @@ class RangSeekBarView : View {
      * Based on the SeekBar.onSeekBarChangeListener
      */
     interface OnRubberSeekBarChangeListener {
-        fun onProgressChanged(seekBar: RangSeekBarView, value: Int, fromUser: Boolean)
+        fun onProgressChanged(seekBar: RangSeekBarView, value: Long, fromUser: Boolean)
         fun onStartTrackingTouch(seekBar: RangSeekBarView)
         fun onStopTrackingTouch(seekBar: RangSeekBarView)
     }
@@ -597,9 +597,9 @@ class RangSeekBarView : View {
 
     private fun convertDpToPx(context: Context, dpValue: Float): Float {
         return TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                dpValue,
-                context.resources.displayMetrics
+            TypedValue.COMPLEX_UNIT_DIP,
+            dpValue,
+            context.resources.displayMetrics
         )
     }
 }

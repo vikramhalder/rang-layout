@@ -304,7 +304,7 @@ class RangSeekBarView : View {
                     thumbY = y.coerceVertical().coerceToStretchRange(thumbX)
                     onChangeListener?.onProgressChanged(this, getCurrentValue(), true)
                     invalidate()
-                    if (getCurrentValue() == maxValue) {
+                    if (getCurrentValue() == maxValueInit) {
                         return false
                     }
                     return true

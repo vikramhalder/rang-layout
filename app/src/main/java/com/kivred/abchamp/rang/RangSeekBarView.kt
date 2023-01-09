@@ -87,6 +87,7 @@ class RangSeekBarView : View {
 
     private var minValue: Long = 0
     private var maxValue: Long = 100
+    private var maxValueInit: Long = 100
 
     private var onChangeListener: OnRubberSeekBarChangeListener? = null
 
@@ -292,10 +293,7 @@ class RangSeekBarView : View {
                 if (isTouchPointInDrawableThumb(x, y)) {
                     springAnimation?.cancel()
                     drawableThumbSelected = true
-//                    thumbX = x.coerceHorizontal()
-//                    thumbY = y.coerceVertical().coerceToStretchRange(thumbX)
                     onChangeListener?.onStartTrackingTouch(this)
-//                    onChangeListener?.onProgressChanged(this, getCurrentValue(), true)
                     invalidate()
                     return true
                 }
@@ -306,15 +304,15 @@ class RangSeekBarView : View {
                     thumbY = y.coerceVertical().coerceToStretchRange(thumbX)
                     onChangeListener?.onProgressChanged(this, getCurrentValue(), true)
                     invalidate()
+                    if (getCurrentValue() == maxValue) {
+                        return false
+                    }
                     return true
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (drawableThumbSelected) {
                     drawableThumbSelected = false
-//                    thumbX = x.coerceHorizontal()
-//                    thumbY = y.coerceVertical().coerceToStretchRange(thumbX)
-//                    onChangeListener?.onProgressChanged(this, getCurrentValue(), true)
                     onChangeListener?.onStopTrackingTouch(this)
                     springAnimation =
                         SpringAnimation(FloatValueHolder(trackY))
@@ -551,11 +549,16 @@ class RangSeekBarView : View {
         }
         val oldValue = getCurrentValue()
         maxValue = value
+        maxValueInit = value
         if (maxValue < oldValue) {
             setCurrentValue(maxValue)
         } else {
             setCurrentValue(oldValue)
         }
+    }
+
+    fun setMaxInit(value: Long) {
+        maxValueInit = value
     }
 
     fun setCurrentValue(value: Long) {
